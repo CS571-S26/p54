@@ -7,7 +7,7 @@ export default function HomePage() {
     <div>
       <PageHeader
         title="Executive Overview"
-        subtitle="CommercePulse is a front-end analytics dashboard for e-commerce business performance."
+        subtitle="Ecomm Forecast Tracker is a front-end analytics dashboard for e-commerce business performance."
       />
 
       <Container>

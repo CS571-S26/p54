@@ -6,7 +6,7 @@ export default function AppNavbar() {
     <Navbar bg="dark" variant="dark" expand="lg">
       <Container>
         <Navbar.Brand as={Link} to="/">
-          CommercePulse
+          Ecomm Forecast Tracker
         </Navbar.Brand>
 
         <Navbar.Toggle aria-controls="main-navbar" />
