@@ -1,76 +1,89 @@
-import { useState } from 'react'
-import { Container, Form, Row, Col, Card } from 'react-bootstrap'
+import { useMemo, useState, useEffect } from 'react'
+import { Container } from 'react-bootstrap'
 import PageHeader from '../components/PageHeader'
+import ForecastControls from '../components/ForecastControls'
 import ForecastSummaryCard from '../components/ForecastSummaryCard'
-
-const forecastData = {
-  'SKU-101': {
-    currentInventory: 120,
-    salesVelocity: 9,
-    forecastedDemand: 63,
-    stockoutDate: 'About 13 days',
-    reorderRecommendation: 'Reorder 80 units soon',
-  },
-  'SKU-205': {
-    currentInventory: 75,
-    salesVelocity: 6,
-    forecastedDemand: 42,
-    stockoutDate: 'About 12 days',
-    reorderRecommendation: 'Reorder 60 units',
-  },
-  'SKU-309': {
-    currentInventory: 40,
-    salesVelocity: 5,
-    forecastedDemand: 35,
-    stockoutDate: 'About 8 days',
-    reorderRecommendation: 'Urgent reorder: 90 units',
-  },
-}
+import ForecastTrendCard from '../components/ForecastTrendCard'
+import { useCommerceData } from '../context/CommerceDataContext'
 
 export default function ForecastPage() {
-  const [selectedSku, setSelectedSku] = useState('SKU-101')
+  const { dashboardData } = useCommerceData()
+  const availableSkus = dashboardData.availableSkus
+  const fallbackSku = availableSkus[0] || ''
 
-  const selectedForecast = forecastData[selectedSku]
+  const [selectedSku, setSelectedSku] = useState(fallbackSku)
+  const [method, setMethod] = useState('rolling-average')
+
+  useEffect(() => {
+    if (!availableSkus.includes(selectedSku)) {
+      setSelectedSku(fallbackSku)
+    }
+  }, [availableSkus, selectedSku, fallbackSku])
+
+  const baseForecast = dashboardData.forecastData[selectedSku]
+
+  const adjustedForecast = useMemo(() => {
+    if (!baseForecast) {
+      return {
+        currentInventory: 0,
+        salesVelocity: 0,
+        forecastedDemand: 0,
+        stockoutDate: 'No data',
+        reorderRecommendation: 'Upload orders and inventory data',
+        forecastTrend: [],
+      }
+    }
+
+    const multiplier = method === 'rolling-average' ? 1 : 1.08
+
+    return {
+      currentInventory: baseForecast.currentInventory,
+      salesVelocity:
+        method === 'rolling-average'
+          ? baseForecast.salesVelocity
+          : Number((baseForecast.salesVelocity * 1.1).toFixed(1)),
+      forecastedDemand: Math.round(baseForecast.forecastedDemand * multiplier),
+      stockoutDate:
+        method === 'rolling-average'
+          ? baseForecast.stockoutDate
+          : 'Slightly sooner than rolling average estimate',
+      reorderRecommendation:
+        method === 'rolling-average'
+          ? baseForecast.reorderRecommendation
+          : `${baseForecast.reorderRecommendation} with higher urgency`,
+      forecastTrend: baseForecast.forecastTrend.map((item) => ({
+        ...item,
+        demand: Math.round(item.demand * multiplier),
+      })),
+    }
+  }, [baseForecast, method])
 
   return (
     <div>
       <PageHeader
         title="Forecast Lab"
-        subtitle="Early prototype for demand forecasting and inventory planning."
+        subtitle="Compare forecasting assumptions and monitor inventory risk by SKU."
       />
 
       <Container>
-        <Row className="mb-4">
-          <Col md={6}>
-            <Card className="shadow-sm border-0">
-              <Card.Body>
-                <Card.Title as="h2" className="fs-4 mb-3">
-                  Forecast Inputs
-                </Card.Title>
-
-                <Form.Group controlId="skuSelector">
-                  <Form.Label>Select SKU</Form.Label>
-                  <Form.Select
-                    value={selectedSku}
-                    onChange={(event) => setSelectedSku(event.target.value)}
-                  >
-                    <option value="SKU-101">SKU-101</option>
-                    <option value="SKU-205">SKU-205</option>
-                    <option value="SKU-309">SKU-309</option>
-                  </Form.Select>
-                </Form.Group>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
+        <ForecastControls
+          selectedSku={selectedSku}
+          setSelectedSku={setSelectedSku}
+          method={method}
+          setMethod={setMethod}
+          availableSkus={availableSkus}
+        />
 
         <ForecastSummaryCard
-          currentInventory={selectedForecast.currentInventory}
-          salesVelocity={selectedForecast.salesVelocity}
-          forecastedDemand={selectedForecast.forecastedDemand}
-          stockoutDate={selectedForecast.stockoutDate}
-          reorderRecommendation={selectedForecast.reorderRecommendation}
+          currentInventory={adjustedForecast.currentInventory}
+          salesVelocity={adjustedForecast.salesVelocity}
+          forecastedDemand={adjustedForecast.forecastedDemand}
+          stockoutDate={adjustedForecast.stockoutDate}
+          reorderRecommendation={adjustedForecast.reorderRecommendation}
+          method={method}
         />
+
+        <ForecastTrendCard data={adjustedForecast.forecastTrend} />
       </Container>
     </div>
   )
