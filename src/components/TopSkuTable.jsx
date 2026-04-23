@@ -20,6 +20,9 @@ export default function TopSkuTable({ items }) {
           <p className="text-muted mb-0">No SKU performance data available yet.</p>
         ) : (
           <Table striped bordered hover responsive className="mb-0 align-middle">
+            <caption className="visually-hidden">
+              Table of top SKUs showing SKU, product name, revenue, and units sold.
+            </caption>
             <thead>
               <tr>
                 <th scope="col">SKU</th>
@@ -31,10 +34,10 @@ export default function TopSkuTable({ items }) {
             <tbody>
               {safeItems.map((item, index) => (
                 <tr key={item.sku}>
-                  <td>
+                  <th scope="row">
                     <div className="fw-semibold">{item.sku}</div>
                     {index === 0 ? <div className="small text-muted">Top performer</div> : null}
-                  </td>
+                  </th>
                   <td>{item.product}</td>
                   <td>{item.revenue}</td>
                   <td>{item.unitsSold}</td>

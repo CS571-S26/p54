@@ -1,7 +1,6 @@
 import { Card, Row, Col, Badge } from 'react-bootstrap'
 import {
   ResponsiveContainer,
-  LineChart,
   Line,
   XAxis,
   YAxis,
@@ -34,20 +33,32 @@ export default function RevenueTrendChart({ data }) {
   const safeData = Array.isArray(data) ? data : []
 
   const totalRevenue = safeData.reduce((sum, item) => sum + (item.revenue || 0), 0)
+
   const peakPeriod =
     safeData.length > 0
       ? safeData.reduce((max, item) => (item.revenue > max.revenue ? item : max), safeData[0])
       : null
+
   const firstValue = safeData[0]?.revenue || 0
   const lastValue = safeData[safeData.length - 1]?.revenue || 0
+
   const trendDirection =
     safeData.length > 1
       ? lastValue > firstValue
-        ? 'Upward trend'
+        ? 'upward trend'
         : lastValue < firstValue
-        ? 'Downward trend'
-        : 'Stable trend'
-      : 'Limited data'
+        ? 'downward trend'
+        : 'stable trend'
+      : 'limited data'
+
+  const chartSummary =
+    safeData.length === 0
+      ? 'No revenue trend data is available.'
+      : `Revenue shows an ${trendDirection} from ${safeData[0]?.week} to ${
+          safeData[safeData.length - 1]?.week
+        }. Total revenue across the chart is $${Math.round(totalRevenue).toLocaleString()}. The peak period is ${
+          peakPeriod?.week || 'not available'
+        } with revenue of $${Math.round(peakPeriod?.revenue || 0).toLocaleString()}.`
 
   return (
     <Card className="shadow-sm border-0 mb-4">
@@ -79,23 +90,23 @@ export default function RevenueTrendChart({ data }) {
               <Col md={4}>
                 <div className="p-3 bg-light rounded h-100">
                   <div className="text-muted small">Peak Period</div>
-                  <div className="fs-5 fw-bold">
-                    {peakPeriod ? `${peakPeriod.week}` : 'N/A'}
-                  </div>
+                  <div className="fs-5 fw-bold">{peakPeriod ? peakPeriod.week : 'N/A'}</div>
                 </div>
               </Col>
 
               <Col md={4}>
                 <div className="p-3 bg-light rounded h-100">
                   <div className="text-muted small">Directional Signal</div>
-                  <div className="fs-5 fw-bold">{trendDirection}</div>
+                  <div className="fs-5 fw-bold text-capitalize">{trendDirection}</div>
                 </div>
               </Col>
             </Row>
 
             <div
               style={{ width: '100%', height: 320 }}
+              role="img"
               aria-label="Line chart showing revenue trend over time"
+              aria-describedby="revenue-trend-summary"
             >
               <ResponsiveContainer>
                 <ComposedChart data={safeData} margin={{ top: 10, right: 15, left: 0, bottom: 5 }}>
@@ -120,6 +131,10 @@ export default function RevenueTrendChart({ data }) {
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
+
+            <p id="revenue-trend-summary" className="visually-hidden">
+              {chartSummary}
+            </p>
           </>
         )}
       </Card.Body>

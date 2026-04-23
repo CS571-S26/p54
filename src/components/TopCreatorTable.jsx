@@ -20,6 +20,10 @@ export default function TopCreatorTable({ items }) {
           <p className="text-muted mb-0">No creator attribution data available yet.</p>
         ) : (
           <Table striped bordered hover responsive className="mb-0 align-middle">
+            <caption className="visually-hidden">
+              Table of top creators showing creator name, channel, attributed revenue, and
+              conversions.
+            </caption>
             <thead>
               <tr>
                 <th scope="col">Creator</th>
@@ -31,10 +35,10 @@ export default function TopCreatorTable({ items }) {
             <tbody>
               {safeItems.map((item, index) => (
                 <tr key={item.creator}>
-                  <td>
+                  <th scope="row">
                     <div className="fw-semibold">{item.creator}</div>
                     {index === 0 ? <div className="small text-muted">Top contributor</div> : null}
-                  </td>
+                  </th>
                   <td>{item.channel}</td>
                   <td>{item.revenue}</td>
                   <td>{item.conversions}</td>

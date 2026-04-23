@@ -35,24 +35,27 @@ export default function ForecastTrendCard({ data }) {
   const safeData = Array.isArray(data) ? data : []
 
   const totalDemand = safeData.reduce((sum, item) => sum + (item.demand || 0), 0)
+
   const peakDay =
     safeData.length > 0
       ? safeData.reduce((max, item) => (item.demand > max.demand ? item : max), safeData[0])
       : null
+
   const lowestDay =
     safeData.length > 0
       ? safeData.reduce((min, item) => (item.demand < min.demand ? item : min), safeData[0])
       : null
 
-  const barColors = [
-    '#0d6efd',
-    '#3d8bfd',
-    '#6ea8fe',
-    '#0dcaf0',
-    '#20c997',
-    '#198754',
-    '#6f42c1',
-  ]
+  const barColors = ['#0d6efd', '#3d8bfd', '#6ea8fe', '#0dcaf0', '#20c997', '#198754', '#6f42c1']
+
+  const chartSummary =
+    safeData.length === 0
+      ? 'No demand forecast data is available.'
+      : `Projected demand is shown for ${safeData.length} days. Total forecasted demand is ${totalDemand} units. The highest demand occurs on ${
+          peakDay?.day || 'not available'
+        } at ${peakDay?.demand || 0} units. The lowest demand occurs on ${
+          lowestDay?.day || 'not available'
+        } at ${lowestDay?.demand || 0} units.`
 
   return (
     <Card className="shadow-sm border-0">
@@ -94,28 +97,28 @@ export default function ForecastTrendCard({ data }) {
 
             <div
               style={{ width: '100%', height: 320 }}
+              role="img"
               aria-label="Bar chart showing projected demand for each day of the week"
+              aria-describedby="forecast-trend-summary"
             >
               <ResponsiveContainer>
-                <BarChart
-                  data={safeData}
-                  margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
-                >
+                <BarChart data={safeData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="day" tickLine={false} axisLine={false} />
                   <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="demand" radius={[10, 10, 0, 0]}>
                     {safeData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${entry.day}`}
-                        fill={barColors[index % barColors.length]}
-                      />
+                      <Cell key={`cell-${entry.day}`} fill={barColors[index % barColors.length]} />
                     ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
+
+            <p id="forecast-trend-summary" className="visually-hidden">
+              {chartSummary}
+            </p>
           </>
         )}
       </Card.Body>
